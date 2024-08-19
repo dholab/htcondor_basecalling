@@ -1,3 +1,5 @@
+# to submit on an HTCondor system, run this workflow with:
+#    `condor_submit_dag workflow.dag`
 
 # declaring the jobs
 JOB BATCH 01_pod5_batcher.sub

@@ -1,0 +1,16 @@
+---
+title: "HTCondor Submit Files, Shell Scripts, and a DAGMan script for Oxford Nanopore Basecalling"
+toc: true
+format:
+    html:
+        embed-resources: true
+        keep-ipynb: false
+    typst: default
+    gfm:
+        wrap: none
+editor: source
+engine: knitr
+execute:
+    echo: false
+    eval: false
+---

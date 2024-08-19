@@ -1,0 +1,44 @@
+spack:
+  specs:
+    - samtools@1.12
+    - git@2.30.1
+    - htslib@1.12
+    - wget
+
+  concretization: together
+
+  view: true
+
+  # You can add custom compiler or other build settings if required for your HPC cluster
+  # config:
+  #   install_tree: /path/to/install/directory
+  #   compilers:
+  #     - compiler:
+  #         spec: gcc@10.2.0
+  #         paths:
+  #           cc: /usr/bin/gcc-10
+  #           cxx: /usr/bin/g++-10
+  #           f77: /usr/bin/gfortran-10
+  #           fc: /usr/bin/gfortran-10
+  #         flags: {}
+  #         operating_system: centos7
+  #         target: x86_64
+  #         modules: []
+  #         environment: {}
+  #         extra_rpaths: []
+
+  # You can also add more settings depending on your HPC setup and requirements
+  # modules:
+  #   enable:
+  #     - lmod
+  #     - tcl
+
+  # Add external packages if needed (e.g., existing software in the HPC environment)
+  # packages:
+  #   all:
+  #     providers:
+  #       mpi: [openmpi]
+  #   cmake:
+  #     paths:
+  #       cmake@3.20.1: /usr/local/cmake-3.20.1
+  #     buildable: False
