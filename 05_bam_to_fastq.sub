@@ -1,0 +1,27 @@
+# logs
+Error = logs/$(Cluster).$(Process).err.txt
+Output = logs/$(Cluster).$(Process).out.txt
+Log = logs/$(Cluster).$(Process).log.txt
+
+# machine specs
+requirements = (OpSysMajorVer == 8) || (OpSysMajorVer == 9) && (Target.HasCHTCStaging == true)
+request_cpus = 3
+request_memory = 16GB
+request_disk = 64GB
++AccountingGroup = "Pathology_OConnor"
+universe = vanilla
+
+# file transfer options
+transfer_input_files = bin/05_bam_to_fastq.sh
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+# Run-specific constant declarations
+BAM_LIST = /staging/groups/oconnor_group/DORADO/POD5_STAGING/30527/pod5s/bams_to_be_converted.txt
+
+# define the queue
+queue BAM from $(BAM_LIST)
+
+# use the constants declared above in the executable's arguments
+executable = bin/05_bam_to_fastq.sh
+Arguments = --bam $(POD5_DIR)

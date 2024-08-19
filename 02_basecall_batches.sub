@@ -1,0 +1,33 @@
+# logs
+Error = logs/$(Cluster).$(Process).err.txt
+Output = logs/$(Cluster).$(Process).out.txt
+Log = logs/$(Cluster).$(Process).log.txt
+
+# machine specs
+requirements = (OpSysMajorVer == 8) || (OpSysMajorVer == 9) && (Target.HasCHTCStaging == true)
+request_cpus = 1
+request_memory = 16GB
+request_disk = 200GB
++AccountingGroup = "Pathology_OConnor"
+universe = vanilla
+request_gpus = 1
++WantGPULab = true
++GPUJobLength = "medium"
+require_gpus = (Capability > 7.5) && (DeviceName == "A100-SXM4-40GB") || (DeviceName == "A100-SXM4-80GB")
+
+# file transfer options
+transfer_input_files = bin/02_basecall_batches.sh
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+# Run-specific constant declarations
+POD5_STAGING_PATH = /staging/groups/oconnor_group/DORADO/POD5_STAGING/30527/pod5s/
+KIT = "SQK-NBD114-24"
+MODEL = "sup@latest"
+
+# define the queue
+queue POD5_DIR from $(POD5_STAGING_PATH)/pod5_batch_dirs.txt
+
+# use the constants declared above in the executable's arguments
+executable = bin/02_basecall_batches.sh
+Arguments = --directory $(POD5_DIR) --kit $(KIT) --model $(MODEL)

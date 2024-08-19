@@ -1,0 +1,26 @@
+# logs
+Error = logs/$(Cluster).$(Process).err.txt
+Output = logs/$(Cluster).$(Process).out.txt
+Log = logs/$(Cluster).$(Process).log.txt
+
+# machine specs
+requirements = (OpSysMajorVer == 8) || (OpSysMajorVer == 9) && (Target.HasCHTCStaging == true)
+request_cpus = 8
+request_memory = 32GB
+request_disk = 350GB
++AccountingGroup = "Pathology_OConnor"
+universe = vanilla
+
+# file transfer options
+transfer_input_files = bin/04_demux_bam.sh
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+# Run-specific constant declarations
+BAM_STAGING_PATH = /staging/groups/oconnor_group/DORADO/POD5_STAGING/30527/
+
+# use the constants declared above in the executable's arguments
+executable = bin/04_demux_bam.sh
+Arguments = --directory "$(BAM_STAGING_PATH)"
+
+queue
