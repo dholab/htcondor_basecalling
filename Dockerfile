@@ -1,7 +1,7 @@
 FROM mambaorg/micromamba:git-8219a05-focal-cuda-12.5.0
 
 # install anything that's available from conda registries
-COPY --chown=$MAMBA_USER:$MAMBA_USER env.yaml /tmp/env.yaml
+COPY --chown=$MAMBA_USER:$MAMBA_USER conf/env.yaml /tmp/env.yaml
 RUN micromamba install -y -n base -f /tmp/env.yaml && \
     micromamba clean --all --yes && \
     micromamba shell init --shell bash --root-prefix=~/micromamba

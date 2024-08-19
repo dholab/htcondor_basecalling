@@ -16,9 +16,9 @@ make-readme:
 compress_html:
     @gzip -f docs/index.html
 
-qmd: render render-dev
+qmd: render
 
-docs: render make-readme render-dev compress_html
+docs: render make-readme compress_html
 
 docker-build:
     docker build -t nrminor/htcondor-basecall:v0.1.0 .
