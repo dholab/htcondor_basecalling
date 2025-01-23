@@ -6,21 +6,29 @@ Log = logs/$(Cluster).$(Process).log.txt
 # machine specs
 requirements = (OpSysMajorVer == 8) || (OpSysMajorVer == 9) && (Target.HasCHTCStaging == true)
 request_cpus = 8
-request_memory = 32GB
-request_disk = 350GB
+request_memory = 48GB
+request_disk = 200GB
 +AccountingGroup = "Pathology_OConnor"
 universe = vanilla
+request_gpus = 4
++WantGPULab = true
++GPUJobLength = "medium"
+require_gpus = (Capability > 7.5)
 
 # file transfer options
-transfer_input_files = bin/03_merge_bams.sh
+transfer_input_files = dorado.tar.gz
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
 # Run-specific constant declarations
-BAM_STAGING_PATH = /staging/groups/oconnor_group/DORADO/POD5_STAGING/30527/
+EXPERIMENT
+POD5_DIR = /staging/groups/oconnor_group/$EXPERIMENT/
+KIT = SQK-16S114-24
+MODEL = sup@latest
 
 # use the constants declared above in the executable's arguments
-executable = bin/03_merge_bams.sh
-Arguments = --directory "$(BAM_STAGING_PATH)"
+executable = basecall.sh
+Arguments = --directory $(POD5_DIR) --kit $(KIT) --model $(MODEL)
 
 queue
+
