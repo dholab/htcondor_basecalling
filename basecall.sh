@@ -48,12 +48,6 @@ if [ -z "$search_dir" ]; then
     exit 1
 fi
 
-# Check if required  dorado tarball is provided
-if [ -f "$dorado" ]; then
-    echo "Error: the required tarball of dorado files is missing."
-    exit 1
-fi
-
 # Use the arguments
 echo "Directory: $search_dir"
 echo "Kit: $kit"
@@ -67,7 +61,7 @@ export PATH=$PATH:$(pwd)/dorado/models:$(pwd)/dorado/dorado-0.7.3-linux-x64/bin:
 check_command() {
     local cmd="$1"
     if ! command -v "$cmd" &> /dev/null; then
-        echo "Error: '$cmd' is not available in your PATH. 😕"
+        echo "[ERROR] '$cmd' is not available in your PATH. 😕"
         echo
         echo "It looks like '$cmd' isn't installed or isn't in your system's PATH."
         echo "Here are a few things you can try:"
@@ -89,18 +83,18 @@ check_command() {
 
 # Run the check
 check_command "dorado"
-echo "Dorado is available and ready to run."
+echo "[INFO] Dorado is available and ready to run."
 
 # pull out the directory basename and parent dir
 RUN_ID=$(basename $search_dir)
-echo "Naming output basecalled file $RUN_ID.bam"
+echo "[INFO] Naming output basecalled file $RUN_ID.bam"
 
 # manually move the POD5 files onto the current execute node
 mkdir -p $RUN_ID && cp $search_dir/*.pod5 $RUN_ID/
 
 # run the basecaller on the current batch
-echo "Now running dorado:"
-echo "dorado basecaller \
+echo "[INFO] Now running dorado:"
+echo "[INFO] dorado basecaller \
 $model \
 $RUN_ID \
 --kit-name $kit \
@@ -113,11 +107,11 @@ dorado basecaller \
 2> "$RUN_ID.dorado.log" \
 > "$RUN_ID.bam"
 
-echo "Dorado basecalling is complete."
+echo "[INFO] Dorado basecalling is complete."
 
 # demultiplex the basecalled BAM
-echo "Proceeding to demultiplexing with the basecalled BAM file $RUN_ID.bam."
-echo "dorado demux $RUN_ID.bam --no-classify --kit-name $kit --output-dir ${search_dir}/${RUN_ID}-demux"
+echo "[INFO] Proceeding to demultiplexing with the basecalled BAM file $RUN_ID.bam."
+echo "[INFO] dorado demux $RUN_ID.bam --no-classify --kit-name $kit --output-dir ${search_dir}/${RUN_ID}-demux"
 dorado demux $RUN_ID.bam --no-classify --output-dir "${search_dir}/${RUN_ID}-demux"
 
-echo "Dorado demultiplexing is complete."
+echo "[INFO] Dorado demultiplexing is complete."
