@@ -83,35 +83,34 @@ check_command() {
 
 # Run the check
 check_command "dorado"
-echo "[INFO] Dorado is available and ready to run."
+echo "Dorado is available and ready to run."
 
 # pull out the directory basename and parent dir
 RUN_ID=$(basename $search_dir)
-echo "[INFO] Naming output basecalled file $RUN_ID.bam"
-
-# manually move the POD5 files onto the current execute node
-mkdir -p $RUN_ID && cp $search_dir/*.pod5 $RUN_ID/
+echo "Naming output basecalled file $RUN_ID.bam"
 
 # run the basecaller on the current batch
-echo "[INFO] Now running dorado:"
-echo "[INFO] dorado basecaller \
+echo "Now running dorado:"
+echo "dorado basecaller \
 $model \
-$RUN_ID \
+$search_dir \
 --kit-name $kit \
 2> $RUN_ID.dorado.log \
 > $RUN_ID.bam"
 dorado basecaller \
 "$model" \
-"$RUN_ID" \
+--no-trim \
+--barcode-both-ends \
+"$search_dir" \
 --kit-name "$kit" \
 2> "$RUN_ID.dorado.log" \
 > "$RUN_ID.bam"
 
-echo "[INFO] Dorado basecalling is complete."
+echo "Dorado basecalling is complete."
 
 # demultiplex the basecalled BAM
-echo "[INFO] Proceeding to demultiplexing with the basecalled BAM file $RUN_ID.bam."
-echo "[INFO] dorado demux $RUN_ID.bam --no-classify --kit-name $kit --output-dir ${search_dir}/${RUN_ID}-demux"
+echo "Proceeding to demultiplexing with the basecalled BAM file $RUN_ID.bam."
+echo "dorado demux $RUN_ID.bam --no-classify --kit-name $kit --output-dir ${search_dir}/${RUN_ID}-demux"
 dorado demux $RUN_ID.bam --no-classify --output-dir "${search_dir}/${RUN_ID}-demux"
 
-echo "[INFO] Dorado demultiplexing is complete."
+echo "Dorado demultiplexing is complete."
