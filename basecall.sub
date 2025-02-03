@@ -23,7 +23,7 @@ when_to_transfer_output = ON_EXIT
 # Run-specific constant declarations
 EXPERIMENT
 POD5_DIR = /staging/groups/oconnor_group/$EXPERIMENT/
-KIT = SQK-16S114-24
+KIT = SQK-NBD114-24
 MODEL = sup@latest
 
 # use the constants declared above in the executable's arguments
