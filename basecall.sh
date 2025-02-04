@@ -1,5 +1,23 @@
 #!/bin/bash
 
+# Record the start time of the script
+start_time=$(date +%s)
+
+# Logging functions
+log_info() {
+  echo "[INFO] $(date '+%Y-%m-%d %H:%M:%S') $*"
+}
+
+log_error() {
+  echo "[ERROR] $(date '+%Y-%m-%d %H:%M:%S') $*" >&2
+}
+
+# Function to format seconds into HH:MM:SS
+format_time() {
+  local total_seconds=$1
+  printf "%02d:%02d:%02d" $((total_seconds/3600)) $(((total_seconds%3600)/60)) $((total_seconds%60))
+}
+
 # Function to print usage
 print_usage() {
     echo "Usage: $0 --directory <path> [--kit <kit>] [--model <model>] [--dorado <dorado tar archive>]"
@@ -43,19 +61,26 @@ done
 
 # Check if required argument is provided
 if [ -z "$search_dir" ]; then
-    echo "Error: --directory is required."
+    log_error "--directory is required."
     print_usage
     exit 1
 fi
 
 # Use the arguments
-echo "Directory: $search_dir"
-echo "Kit: $kit"
-echo "Model: $model"
+log_info "Directory: $search_dir"
+log_info "Kit: $kit"
+log_info "Model: $model"
 
 # place all the dorado stuff on the $PATH after decompressing it
+log_info "Extracting dorado archive: $dorado"
 tar xf $dorado && \
 export PATH=$PATH:$(pwd)/dorado/models:$(pwd)/dorado/dorado-0.7.3-linux-x64/bin:$(pwd)/dorado/dorado-0.7.3-linux-x64/lib
+if [ $? -eq 0 ]; then
+    log_info "Dorado archive extracted successfully and PATH updated."
+else
+    log_error "Failed to extract dorado archive: $dorado"
+    exit 1
+fi
 
 # define a function that checks for a dorado installation
 check_command() {
@@ -83,23 +108,26 @@ check_command() {
 
 # Run the check
 check_command "dorado"
-echo "Dorado is available and ready to run."
+log_info "Dorado is available and ready to run."
 
 # pull out the directory basename and parent dir
 RUN_ID=$(basename $search_dir)
-echo "Naming output basecalled file $RUN_ID.bam"
+log_info "Naming output basecalled file $RUN_ID.bam"
 
 # manually move the POD5 files onto the current execute node
+log_info "Copying .pod5 files from $search_dir to directory $RUN_ID"
 mkdir -p $RUN_ID && cp $search_dir/*.pod5 $RUN_ID/
 
 # run the basecaller on the current batch
-echo "Now running dorado:"
-echo "dorado basecaller \
-$model \
-$RUN_ID \
---kit-name $kit \
-2> $RUN_ID.dorado.log \
-> $RUN_ID.bam"
+log_info "Now running dorado basecaller:"
+log_info "Command: dorado basecaller \\"
+log_info "         $model \\"
+log_info "         $RUN_ID \\"
+log_info "         --no-trim \\"
+log_info "         --barcode-both-ends \\"
+log_info "         --kit-name $kit \\"
+log_info "         2> ${RUN_ID}.dorado.log \\"
+log_info "         > ${RUN_ID}.bam"
 dorado basecaller \
 "$model" \
 "$RUN_ID" \
@@ -108,16 +136,37 @@ dorado basecaller \
 --kit-name "$kit" \
 2> "$RUN_ID.dorado.log" \
 > "$RUN_ID.bam"
-
-echo "Dorado basecalling is complete."
+if [ $? -eq 0 ]; then
+    log_info "Dorado basecalling is complete."
+else
+    log_error "Dorado basecalling encountered an error."
+    exit 1
+fi
 
 # demultiplex the basecalled BAM
-echo "Proceeding to demultiplexing with the basecalled BAM file $RUN_ID.bam."
-echo "dorado demux $RUN_ID.bam --no-classify --kit-name $kit --output-dir ${RUN_ID}-demux"
+log_info "Proceeding to demultiplexing with the basecalled BAM file ${RUN_ID}.bam."
+log_info "Command: dorado demux ${RUN_ID}.bam --no-classify --output-dir ${RUN_ID}-demux"
 dorado demux $RUN_ID.bam --no-classify --output-dir "${RUN_ID}-demux"
+if [ $? -eq 0 ]; then
+    log_info "Dorado demultiplexing is complete."
+else
+    log_error "Dorado demultiplexing encountered an error."
+    exit 1
+fi
 
 # move results back to staging
-echo "Transferring results back to staging server"
+log_info "Transferring results back to staging server."
 mv "${RUN_ID}-demux" "${search_dir}/${RUN_ID}-demux"
+if [ $? -eq 0 ]; then
+    log_info "Results transferred successfully."
+else
+    log_error "Failed to transfer results to staging server."
+    exit 1
+fi
 
-echo "Dorado demultiplexing is complete."
+# Calculate and report the script runtime
+end_time=$(date +%s)
+elapsed=$(( end_time - start_time ))
+formatted_elapsed=$(format_time "$elapsed")
+log_info "Script completed successfully in $formatted_elapsed (HH:MM:SS)."
+
