@@ -146,7 +146,7 @@ fi
 # demultiplex the basecalled BAM
 log_info "Proceeding to demultiplexing with the basecalled BAM file ${RUN_ID}.bam."
 log_info "Command: dorado demux ${RUN_ID}.bam --no-classify --output-dir ${RUN_ID}-demux"
-dorado demux $RUN_ID.bam --no-classify --output-dir "${RUN_ID}-demux"
+dorado demux $RUN_ID.bam --no-classify --output-dir "${RUN_ID}-demux" 2>> "$RUN_ID.dorado.log"
 if [ $? -eq 0 ]; then
     log_info "Dorado demultiplexing is complete."
 else
