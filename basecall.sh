@@ -115,7 +115,7 @@ RUN_ID=$(basename $search_dir)
 log_info "Naming output basecalled file $RUN_ID.bam"
 
 # manually move the POD5 files onto the current execute node
-log_info "Copying .pod5 files from $search_dir to directory $RUN_ID"
+log_info "Copying .pod5 files from $search_dir into the current execute node."
 mkdir -p $RUN_ID && cp $search_dir/*.pod5 $RUN_ID/
 
 # run the basecaller on the current batch
