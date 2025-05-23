@@ -17,7 +17,7 @@ gpus_minimum_capability = 8.0
 gpus_maximum_capability = 8.0
 
 # file transfer options
-transfer_input_files = dorado.tar.gz
+transfer_input_files = /staging/groups/oconnor_group/ont/dorado.tar.gz
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
