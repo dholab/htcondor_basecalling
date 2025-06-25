@@ -24,7 +24,7 @@ print_usage() {
 	echo "  --directory: Directory where .pod5 files to be basecalled have been placed (required)."
 	echo "  --kit: The Oxford Nanopore barcoding kit used (defaults to SQK-NBD114-24)."
 	echo "  --model: The basecalling model to use (defaults to sup@latest)."
-	echo "  --dorado: The name of the dorado tar archive, which itself contains the prebuilt 'dorado-0.7.3-linux-x64' directory and a pre-downloaded 'models/' directory (defaults to dorado.tar.gz)."
+	echo "  --dorado: The name of the dorado tar archive, which itself contains the prebuilt 'dorado-1.0.2-linux-x64' directory and a pre-downloaded 'models/' directory (defaults to dorado.tar.gz)."
 }
 
 # set defaults for some of the command line args
@@ -74,7 +74,7 @@ log_info "Model: $model"
 # place all the dorado stuff on the $PATH after decompressing it
 log_info "Extracting dorado archive: $dorado"
 tar xf $dorado &&
-	export PATH=$PATH:$(pwd)/dorado/models:$(pwd)/dorado/dorado-0.7.3-linux-x64/bin:$(pwd)/dorado/dorado-0.7.3-linux-x64/lib
+	export PATH=$PATH:$(pwd)/dorado/models:$(pwd)/dorado/dorado-1.0.2-linux-x64/bin:$(pwd)/dorado/dorado-1.0.2-linux-x64/lib
 if [ $? -eq 0 ]; then
 	log_info "Dorado archive extracted successfully and PATH updated."
 else
