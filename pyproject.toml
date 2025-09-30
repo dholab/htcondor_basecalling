@@ -21,3 +21,4 @@ platforms = ["osx-64", "linux-64", "linux-aarch64"]
 seqkit = ">=2.10.1,<3"
 parallel = ">=20250822,<20250823"
 samtools = ">=1.22.1,<2"
+csvtk = ">=0.34.0,<0.35"
