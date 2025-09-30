@@ -2,12 +2,13 @@
 Error = logs/$(Cluster).$(Process).err.txt
 Output = logs/$(Cluster).$(Process).out.txt
 Log = logs/$(Cluster).$(Process).log.txt
+ResearchDrive = pelican://chtc.wisc.edu/researchdrive/dhoconno/CHTC
 
 # machine specs
 requirements = (OpSysMajorVer == 8) || (OpSysMajorVer == 9) && (Target.HasCHTCStaging == true)
 request_cpus = 8
 request_memory = 48GB
-request_disk = 200GB
+request_disk = 300GB
 +AccountingGroup = "Pathology_OConnor"
 universe = vanilla
 request_gpus = 4
@@ -17,18 +18,18 @@ gpus_minimum_capability = 8.0
 gpus_maximum_capability = 8.0
 
 # file transfer options
-transfer_input_files = dorado.tar.gz
+transfer_input_files = "$(ResearchDrive)/dorado.tar.gz"
+#transfer_input_files = dorado.tar.gz
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
 # Run-specific constant declarations
-POD5_DIR = /staging/groups/oconnor_group/<EXPERIMENT_NUMBER>
+POD5_DIR = /staging/groups/oconnor_group/31270-wg
 KIT = SQK-NBD114-24
 MODEL = sup@latest
 
 # use the constants declared above in the executable's arguments
-executable = basecall.sh
+executable = dummy-job.sh
 Arguments = --directory $(POD5_DIR) --kit $(KIT) --model $(MODEL)
 
 queue
-
