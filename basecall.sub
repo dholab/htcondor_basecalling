@@ -29,7 +29,7 @@ KIT = SQK-NBD114-24
 MODEL = sup@latest
 
 # use the constants declared above in the executable's arguments
-executable = dummy-job.sh
+executable = basecall.sh
 Arguments = --directory $(POD5_DIR) --kit $(KIT) --model $(MODEL)
 
 queue
