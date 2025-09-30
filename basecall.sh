@@ -25,6 +25,8 @@ Usage: $0 --directory <path> [OPTIONS]
 
 Required arguments:
   --directory <path>    Directory containing .pod5 files to basecall
+                        Can be a directory with .pod5 files directly, or
+                        a directory containing barcode subdirectories with .pod5 files
 
 Optional arguments:
   --kit <kit>          Oxford Nanopore barcoding kit (default: SQK-NBD114-24)
@@ -32,8 +34,12 @@ Optional arguments:
   --dorado <archive>   Dorado tar archive name (default: dorado.tar.gz)
   --help               Display this help message
 
-Example:
+Examples:
+  # Direct pod5 files
   $0 --directory /path/to/pod5s --kit SQK-NBD114-24 --model sup@latest
+
+  # Barcode subdirectories
+  $0 --directory /path/to/pod5_pass --kit SQK-NBD114-24 --model sup@latest
 EOF
 }
 
@@ -160,21 +166,72 @@ RUN_ID=$(basename "$search_dir")
 log_info "Run ID: $RUN_ID"
 log_info "Output file: ${RUN_ID}.bam"
 
-# Copy POD5 files to execute node
-log_info "Copying .pod5 files from $search_dir"
+# Smart POD5 file detection and copying
+log_info "Searching for .pod5 files..."
 mkdir -p "$RUN_ID" || exit 1
 
-pod5_count=$(find "$search_dir" -maxdepth 1 -name "*.pod5" | wc -l)
-if [ "$pod5_count" -eq 0 ]; then
-    log_error "No .pod5 files found in $search_dir"
+# Check for POD5 files directly in the directory
+direct_pod5_count=$(find "$search_dir" -maxdepth 1 -type f -name "*.pod5" 2>/dev/null | wc -l)
+
+# Check for POD5 files in subdirectories
+subdirs_pod5_count=$(find "$search_dir" -mindepth 2 -type f -name "*.pod5" 2>/dev/null | wc -l)
+
+log_info "Found $direct_pod5_count .pod5 files directly in directory"
+log_info "Found $subdirs_pod5_count .pod5 files in subdirectories"
+
+if [ "$direct_pod5_count" -gt 0 ] && [ "$subdirs_pod5_count" -eq 0 ]; then
+    # Case 1: POD5 files are directly in the directory
+    log_info "Copying POD5 files from directory root..."
+    if ! cp "$search_dir"/*.pod5 "$RUN_ID"/; then
+        log_error "Failed to copy .pod5 files"
+        exit 1
+    fi
+    total_copied=$direct_pod5_count
+
+elif [ "$subdirs_pod5_count" -gt 0 ]; then
+    # Case 2: POD5 files are in subdirectories (barcode directories)
+    log_info "Detected barcode subdirectories. Consolidating all .pod5 files..."
+
+    # Find all POD5 files recursively and copy them
+    file_count=0
+    while IFS= read -r -d '' pod5_file; do
+        # Copy with a unique name if there are duplicates
+        filename=$(basename "$pod5_file")
+        parent_dir=$(basename "$(dirname "$pod5_file")")
+
+        # If filename already exists, prefix with parent directory name
+        if [ -f "$RUN_ID/$filename" ]; then
+            new_filename="${parent_dir}_${filename}"
+            log_info "  Renaming duplicate: $filename -> $new_filename"
+            cp "$pod5_file" "$RUN_ID/$new_filename"
+        else
+            cp "$pod5_file" "$RUN_ID/$filename"
+        fi
+
+        ((file_count++))
+
+        # Log progress every 100 files
+        if [ $((file_count % 100)) -eq 0 ]; then
+            log_info "  Copied $file_count files..."
+        fi
+    done < <(find "$search_dir" -type f -name "*.pod5" -print0)
+
+    total_copied=$file_count
+    log_info "Successfully consolidated $total_copied .pod5 files from subdirectories"
+
+else
+    log_error "No .pod5 files found in $search_dir or its subdirectories"
     exit 1
 fi
 
-log_info "Found $pod5_count .pod5 files"
-if ! cp "$search_dir"/*.pod5 "$RUN_ID"/; then
-    log_error "Failed to copy .pod5 files"
+# Verify we have files to process
+final_count=$(find "$RUN_ID" -type f -name "*.pod5" | wc -l)
+if [ "$final_count" -eq 0 ]; then
+    log_error "No .pod5 files available for processing"
     exit 1
 fi
+
+log_info "Total .pod5 files ready for basecalling: $final_count"
 
 # Run basecaller
 log_info "Running dorado basecaller..."
@@ -233,6 +290,7 @@ if [ ${#fastq_files[@]} -eq 0 ] || [ ! -e "${fastq_files[0]}" ]; then
 fi
 
 log_info "Found ${#fastq_files[@]} FASTQ files"
+
 # Always save to seqstats.tsv
 pixi run seqkit stats -b -a -T -j 1 "${fastq_files[@]}" > seqstats.tsv
 log_info "Sequence statistics saved to seqstats.tsv"
@@ -243,15 +301,14 @@ pixi run csvtk pretty -t --style 3line seqstats.tsv
 # Return to parent directory
 cd ..
 
-# move results back to staging
+# Move results back to staging
 log_info "Transferring results back to staging server."
-mv "${RUN_ID}-demux" "${search_dir}/${RUN_ID}-demux"
-if [ $? -eq 0 ]; then
-	log_info "Results transferred successfully."
-else
-	log_error "Failed to transfer results to staging server."
-	exit 1
+if ! mv "${RUN_ID}-demux" "${search_dir}/${RUN_ID}-demux"; then
+    log_error "Failed to transfer results to staging server."
+    exit 1
 fi
+
+log_info "Results transferred successfully."
 
 # Calculate and report runtime
 end_time=$(date +%s)
@@ -261,6 +318,7 @@ formatted_elapsed=$(format_time "$elapsed")
 log_info "====================================="
 log_info "Script completed successfully!"
 log_info "Runtime: $formatted_elapsed (HH:MM:SS)"
-log_info "Output directory: ${RUN_ID}-demux"
+log_info "Output directory: ${search_dir}/${RUN_ID}-demux"
 log_info "Log file: ${RUN_ID}.dorado.log"
+log_info "Stats file: ${search_dir}/${RUN_ID}-demux/seqstats.tsv"
 log_info "====================================="
